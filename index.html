@@ -140,6 +140,22 @@ footer{text-align:center;padding:24px;background:#0a0a15;color:#555;font-size:.8
 .modal-close{float:right;background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;margin-top:-4px}
 .modal-close:hover{color:#fff}
 
+/* URL MODAL */
+.url-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.url-item{display:flex;align-items:center;gap:8px;background:#0a0a15;
+          border:1px solid #2a3a55;border-radius:8px;padding:8px 10px}
+.url-item span{flex:1;font-size:.75rem;color:#aaa;word-break:break-all}
+.url-item button{background:none;border:none;cursor:pointer;font-size:.85rem;
+                 color:#555;padding:0 4px;flex-shrink:0}
+.url-item button:hover{color:#fff}
+.url-item .reload-btn:hover{color:var(--primary)}
+.url-item .del-btn:hover{color:#e55}
+.url-input-row{display:flex;gap:8px}
+.url-input-row input{flex:1;padding:9px 12px;border-radius:8px;border:1px solid #333;
+                     background:#0a0a15;color:#fff;font-size:.83rem}
+.url-input-row input::placeholder{color:#555}
+.url-sync-status{font-size:.75rem;color:#555;margin-top:8px}
+
 /* HIDDEN FILE INPUTS */
 #jsonInput,#pngInput{display:none}
 </style>
@@ -196,6 +212,7 @@ footer{text-align:center;padding:24px;background:#0a0a15;color:#555;font-size:.8
         <div class="picker-actions">
           <button class="btn btn-sm btn-outline" onclick="document.getElementById('jsonInput').click()" title="Import catalog JSON">📂 Import</button>
           <button class="btn btn-sm btn-outline" onclick="document.getElementById('pngInput').click()" title="Thêm ảnh kính PNG">➕ Thêm</button>
+          <button class="btn btn-sm btn-outline" onclick="showUrlModal()" title="Load từ URL (sync mọi thiết bị)">🔗 URL</button>
           <button class="btn btn-sm btn-outline" onclick="showSampleModal()" title="Xem định dạng JSON mẫu">❓</button>
         </div>
       </div>
@@ -244,6 +261,31 @@ footer{text-align:center;padding:24px;background:#0a0a15;color:#555;font-size:.8
 
 <!-- Toast -->
 <div id="toast"></div>
+
+<!-- URL Modal -->
+<div class="modal-overlay" id="urlModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeUrlModal()">✕</button>
+    <h3>🔗 Load catalog từ URL</h3>
+    <p style="color:#888;font-size:.82rem;margin-bottom:14px;line-height:1.6">
+      Paste URL file <code style="color:var(--primary);background:rgba(108,99,255,.1);padding:1px 5px;border-radius:4px">.json</code> công khai (GitHub, CDN...).
+      URL được lưu lại — mọi thiết bị mở trang sẽ tự đồng bộ.
+    </p>
+    <div class="url-input-row">
+      <input type="url" id="urlInput" placeholder="https://raw.githubusercontent.com/..." />
+      <button class="btn btn-sm" onclick="loadFromUrl()">Load</button>
+    </div>
+    <div class="url-sync-status" id="urlSyncStatus"></div>
+    <div class="url-list" id="urlList"></div>
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #1e2a45">
+      <p style="color:#555;font-size:.75rem;margin-bottom:6px">Catalog Gucci mẫu (dùng luôn):</p>
+      <button class="btn btn-sm btn-outline" style="font-size:.75rem;padding:6px 14px"
+        onclick="document.getElementById('urlInput').value='https://raw.githubusercontent.com/phongdaikhp98/glass-online/main/gucci-catalog.json'">
+        Dán URL Gucci catalog
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- JSON Sample Modal -->
 <div class="modal-overlay" id="sampleModal">
@@ -775,10 +817,178 @@ async function initTryOn() {
 }
 
 // ─────────────────────────────────────────────
+// URL CATALOG — load & sync
+// ─────────────────────────────────────────────
+let savedUrls = JSON.parse(localStorage.getItem('opti_catalog_urls') || '[]');
+
+function saveUrls() {
+  localStorage.setItem('opti_catalog_urls', JSON.stringify(savedUrls));
+}
+
+async function loadFromUrl() {
+  const input = document.getElementById('urlInput');
+  const url = input.value.trim();
+  if (!url) return;
+
+  // Convert GitHub blob URL → raw
+  const fetchUrl = url
+    .replace('github.com', 'raw.githubusercontent.com')
+    .replace('/blob/', '/');
+
+  setUrlStatus('Đang tải...', '');
+  try {
+    const res = await fetch(fetchUrl);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    let data = await res.json();
+    if (!Array.isArray(data)) data = data.catalog || data.glasses || [];
+
+    // Remove old items loaded from this URL, then re-add fresh ones
+    imported = imported.filter(g => g._src !== fetchUrl);
+
+    let added = 0;
+    data.forEach(item => {
+      if (!item.name) return;
+      const id = 'url_' + btoa(fetchUrl).slice(0,8) + '_' + Math.random().toString(36).slice(2,6);
+      imported.push({
+        id,
+        name:     item.name     || 'Kính mới',
+        brand:    item.brand    || '',
+        price:    item.price    || '',
+        style:    item.style    || 'other',
+        type:     item.imageUrl ? 'image' : 'drawn',
+        imageUrl: item.imageUrl || '',
+        color:    item.color    || '#111111',
+        frame:    item.frame    || 3,
+        scaleX:   item.scaleX   || 1.0,
+        offsetY:  item.offsetY  || 0,
+        _src:     fetchUrl,
+      });
+      added++;
+    });
+
+    saveImported();
+
+    // Save URL if not already in list
+    if (!savedUrls.includes(fetchUrl)) {
+      savedUrls.push(fetchUrl);
+      saveUrls();
+    }
+
+    renderUrlList();
+    renderFilterTabs();
+    renderGrid();
+    setUrlStatus(`Đã load ${added} kính từ URL`, 'ok');
+    input.value = '';
+  } catch(e) {
+    setUrlStatus('Lỗi: ' + e.message, 'err');
+  }
+}
+
+async function reloadUrl(url) {
+  document.getElementById('urlInput').value = url;
+  await loadFromUrl();
+}
+
+function removeUrl(url) {
+  savedUrls = savedUrls.filter(u => u !== url);
+  imported  = imported.filter(g => g._src !== url);
+  saveUrls();
+  saveImported();
+  renderUrlList();
+  renderFilterTabs();
+  renderGrid();
+  showToast('Đã xóa catalog URL', '');
+}
+
+function setUrlStatus(msg, type) {
+  const el = document.getElementById('urlSyncStatus');
+  el.textContent = msg;
+  el.style.color = type === 'ok' ? '#6C63FF' : type === 'err' ? '#e55' : '#888';
+}
+
+function renderUrlList() {
+  const list = document.getElementById('urlList');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!savedUrls.length) {
+    list.innerHTML = '<p style="color:#444;font-size:.75rem">Chưa có URL nào được lưu.</p>';
+    return;
+  }
+  savedUrls.forEach(url => {
+    const row = document.createElement('div');
+    row.className = 'url-item';
+    const short = url.replace('https://raw.githubusercontent.com/', 'github:')
+                     .replace('https://', '');
+    row.innerHTML = `
+      <span title="${url}">${short}</span>
+      <button class="reload-btn" title="Sync lại" onclick="reloadUrl('${url}')">🔄</button>
+      <button class="del-btn"    title="Xóa URL này" onclick="removeUrl('${url}')">✕</button>`;
+    list.appendChild(row);
+  });
+}
+
+function showUrlModal() {
+  renderUrlList();
+  setUrlStatus('', '');
+  document.getElementById('urlModal').classList.add('open');
+}
+function closeUrlModal() {
+  document.getElementById('urlModal').classList.remove('open');
+}
+document.getElementById('urlModal').addEventListener('click', function(e) {
+  if (e.target === this) closeUrlModal();
+});
+// Enter key in URL input
+document.getElementById('urlInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') loadFromUrl();
+});
+
+// Auto-sync all saved URLs on page load
+async function autoSync() {
+  if (!savedUrls.length) return;
+  // Clear all url-sourced items first to avoid duplicates
+  imported = imported.filter(g => !g._src);
+  let total = 0;
+  for (const url of savedUrls) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      let data = await res.json();
+      if (!Array.isArray(data)) data = data.catalog || data.glasses || [];
+      data.forEach(item => {
+        if (!item.name) return;
+        const id = 'url_' + btoa(url).slice(0,8) + '_' + Math.random().toString(36).slice(2,6);
+        imported.push({
+          id, _src: url,
+          name:     item.name     || 'Kính mới',
+          brand:    item.brand    || '',
+          price:    item.price    || '',
+          style:    item.style    || 'other',
+          type:     item.imageUrl ? 'image' : 'drawn',
+          imageUrl: item.imageUrl || '',
+          color:    item.color    || '#111111',
+          frame:    item.frame    || 3,
+          scaleX:   item.scaleX   || 1.0,
+          offsetY:  item.offsetY  || 0,
+        });
+        total++;
+      });
+    } catch(e) { /* skip failed URL silently */ }
+  }
+  if (total) {
+    saveImported();
+    renderFilterTabs();
+    renderGrid();
+    showToast(`Đã đồng bộ ${total} kính từ ${savedUrls.length} URL`, 'success');
+  }
+}
+
+// ─────────────────────────────────────────────
 // BOOTSTRAP
 // ─────────────────────────────────────────────
 renderFilterTabs();
 renderGrid();
+autoSync();
 </script>
 </body>
 </html>
