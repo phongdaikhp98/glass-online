@@ -1,0 +1,184 @@
+{
+  "catalog": [
+    {
+      "name": "Gucci GG0061S",
+      "brand": "Gucci",
+      "price": "6,400,000đ",
+      "style": "round",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/products/0003_GG0061S00156.jpg?v=1683893504",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG0225S",
+      "brand": "Gucci",
+      "price": "7,125,000đ",
+      "style": "round",
+      "imageUrl": "https://pretavoir.us/cdn/shop/products/gucci-gg0225s-001-hd-1_9d4d2536-a83d-4c2c-8ae7-71285d33f2b0_1500x1500.jpg?v=1611916513",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG0396S",
+      "brand": "Gucci",
+      "price": "6,650,000đ",
+      "style": "square",
+      "imageUrl": "https://pretavoir.us/cdn/shop/products/gucci-gg0396s-001-hd-1_1500x1500.jpg?v=1611916651",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG0010S",
+      "brand": "Gucci",
+      "price": "5,825,000đ",
+      "style": "rect",
+      "imageUrl": "https://pretavoir.us/cdn/shop/products/gucci-gg0010s-001-hd-1_1500x1500.jpg?v=1681986504",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG1278S",
+      "brand": "Gucci",
+      "price": "7,925,000đ",
+      "style": "rect",
+      "imageUrl": "https://pretavoir.us/cdn/shop/products/gucci-gg1278s-001-hd-1_1500x1500.jpg?v=1681986556",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG0528S",
+      "brand": "Gucci",
+      "price": "6,325,000đ",
+      "style": "aviator",
+      "imageUrl": "https://pretavoir.us/cdn/shop/products/gucci-gg0528s-009-hd-1_759877da-1726-4041-ae96-376ae3e37b28_1500x1500.jpg?v=1611916743",
+      "scaleX": 1.1,
+      "offsetY": 3
+    },
+    {
+      "name": "Gucci GG0597S",
+      "brand": "Gucci",
+      "price": "17,825,000đ",
+      "style": "cat",
+      "imageUrl": "https://www.eurooptica.com/cdn/shop/files/gg0597s-001-00_21926a8a-1aae-4e8d-8f0a-fc32bde9d428.jpg?v=1697612101",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG0817S",
+      "brand": "Gucci",
+      "price": "15,125,000đ",
+      "style": "square",
+      "imageUrl": "https://www.goodseeco.com/cdn/shop/files/1_1494a4d7-7f71-4e6c-a88b-ccb6d3afaa85.png?v=1764899248",
+      "scaleX": 1.05,
+      "offsetY": 3
+    },
+    {
+      "name": "Gucci GG0879S",
+      "brand": "Gucci",
+      "price": "10,500,000đ",
+      "style": "square",
+      "imageUrl": "https://www.eyeons.com/cdn/shop/files/gg0879s-003-01.jpg?v=1769515431",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG0956S",
+      "brand": "Gucci",
+      "price": "6,200,000đ",
+      "style": "square",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/files/GG0956S-009-cat-xxl.jpg?v=1701863494",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG1937S",
+      "brand": "Gucci",
+      "price": "16,250,000đ",
+      "style": "square",
+      "imageUrl": "https://www.goodseeco.com/cdn/shop/files/01copy_75d822f0-aa47-4df7-99bc-b753f74a5294_1024x1024.jpg?v=1774484536",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG1967S",
+      "brand": "Gucci",
+      "price": "7,550,000đ",
+      "style": "cat",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/files/GG1967S-004-cat-xxl.jpg?v=1755712281",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG1960S",
+      "brand": "Gucci",
+      "price": "7,650,000đ",
+      "style": "square",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/files/GG1960S-002-cat-xxl_grande.jpg?v=1755711550",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG1985S",
+      "brand": "Gucci",
+      "price": "4,475,000đ",
+      "style": "rect",
+      "imageUrl": "https://stepanistyle.com/cdn/shop/files/GG1985S-001-1_d1fa9c51-82ec-4250-a58c-affe083a10b4.jpg?v=1774113396&width=1920",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG2050S",
+      "brand": "Gucci",
+      "price": "8,825,000đ",
+      "style": "cat",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/files/gucci-gg2050s-002-hd-1.jpg?v=1774969654",
+      "scaleX": 1.05,
+      "offsetY": 3
+    },
+    {
+      "name": "Gucci GG1426S",
+      "brand": "Gucci",
+      "price": "6,300,000đ",
+      "style": "rect",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/files/GG1426S-002-cat-xxl_dc0d231d-fa2c-495f-9e63-3949b1e1b22a.jpg?v=1696262778",
+      "scaleX": 1.05,
+      "offsetY": 2
+    },
+    {
+      "name": "Gucci GG1084S",
+      "brand": "Gucci",
+      "price": "6,500,000đ",
+      "style": "square",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/files/GG1084S-001-cat-xxl.jpg?v=1714109682",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG0680S",
+      "brand": "Gucci",
+      "price": "11,625,000đ",
+      "style": "round",
+      "imageUrl": "https://cdn11.bigcommerce.com/s-28d61/images/stencil/1280x1280/products/12597/105014/eyewear-brands-gucci-round-goldbrown-lens-56-145mm-womens-sunglasses-gg0680s-003__13826.1652728127.jpg?c=2",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG1946S",
+      "brand": "Gucci",
+      "price": "8,500,000đ",
+      "style": "square",
+      "imageUrl": "https://www.fashioneyewear.com/cdn/shop/files/GG1084S-001-cat-xxl.jpg?v=1714109682",
+      "scaleX": 1.0,
+      "offsetY": 0
+    },
+    {
+      "name": "Gucci GG0354S",
+      "brand": "Gucci",
+      "price": "7,778,000đ",
+      "style": "aviator",
+      "imageUrl": "https://pretavoir.us/cdn/shop/products/gucci-gg0528s-009-hd-1_759877da-1726-4041-ae96-376ae3e37b28_1500x1500.jpg?v=1611916743",
+      "scaleX": 1.1,
+      "offsetY": 3
+    }
+  ]
+}
