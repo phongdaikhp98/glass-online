@@ -203,6 +203,15 @@ footer{text-align:center;padding:24px;background:#0a0a15;color:#555;font-size:.8
         <button id="btnOpacity" onclick="cycleOpacity()">Độ trong suốt: 30%</button>
         <button id="btnSnap" onclick="takeSnapshot()" style="display:none">📸 Chụp ảnh</button>
       </div>
+      <div class="cam-controls" id="bgRemoveRow" style="display:none;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:.78rem;color:#888">Xóa nền:</span>
+        <input type="range" id="bgThreshSlider" min="10" max="120" value="40"
+               style="width:110px;accent-color:var(--primary)"
+               oninput="onThresholdChange(this.value)"/>
+        <span id="bgThreshVal" style="font-size:.78rem;color:var(--primary);min-width:22px">40</span>
+        <button onclick="reprocessAll()" style="padding:4px 12px;border-radius:20px;border:1px solid #444;
+                background:#1e2a45;color:#ccc;cursor:pointer;font-size:.78rem">Áp dụng lại</button>
+      </div>
     </div>
 
     <!-- PICKER -->
@@ -316,8 +325,11 @@ const BUILT_IN = [
 // User-imported glasses (from JSON or PNG upload)
 let imported = JSON.parse(localStorage.getItem('opti_catalog') || '[]');
 
-// Image cache: id → HTMLImageElement
+// Image cache: id → HTMLImageElement (raw)
 const imgCache = {};
+// Processed cache: id → HTMLCanvasElement (background removed)
+const processedCache = {};
+let bgThreshold = 40; // color-distance threshold for bg removal
 
 function allGlasses() { return [...BUILT_IN, ...imported]; }
 
@@ -385,31 +397,107 @@ function drawGlassesDrawn(ctx, cx, cy, rx, ry, angle, g, scale, opacity) {
 }
 
 // ─────────────────────────────────────────────
+// BACKGROUND REMOVAL — pixel manipulation
+// Only works for data URLs (uploaded PNG) — no CORS issue
+// ─────────────────────────────────────────────
+function removeBackground(img, threshold) {
+  const oc = document.createElement('canvas');
+  oc.width  = img.naturalWidth  || img.width;
+  oc.height = img.naturalHeight || img.height;
+  const octx = oc.getContext('2d');
+  octx.drawImage(img, 0, 0);
+
+  try {
+    const data = octx.getImageData(0, 0, oc.width, oc.height);
+    const px   = data.data;
+    const W    = oc.width, H = oc.height;
+
+    // Sample background color from 4 corners
+    function cornerColor(x, y) {
+      const i = (y * W + x) * 4;
+      return [px[i], px[i+1], px[i+2]];
+    }
+    const samples = [
+      cornerColor(0, 0), cornerColor(W-1, 0),
+      cornerColor(0, H-1), cornerColor(W-1, H-1),
+    ];
+    const bgR = samples.reduce((s,c) => s+c[0], 0) / 4;
+    const bgG = samples.reduce((s,c) => s+c[1], 0) / 4;
+    const bgB = samples.reduce((s,c) => s+c[2], 0) / 4;
+
+    for (let i = 0; i < px.length; i += 4) {
+      const dr = px[i]   - bgR;
+      const dg = px[i+1] - bgG;
+      const db = px[i+2] - bgB;
+      const dist = Math.sqrt(dr*dr + dg*dg + db*db);
+      if (dist < threshold) {
+        px[i+3] = 0; // fully transparent
+      } else if (dist < threshold * 2.5) {
+        // soft edge: fade proportionally
+        px[i+3] = Math.round(Math.min(px[i+3], (dist - threshold) / (threshold * 1.5) * 255));
+      }
+    }
+    octx.putImageData(data, 0, 0);
+    return { canvas: oc, hasCors: true };
+  } catch(e) {
+    // CORS blocked — return raw image, will use multiply blend
+    return { canvas: null, hasCors: false };
+  }
+}
+
+// ─────────────────────────────────────────────
 // DRAW GLASSES — real image
 // ─────────────────────────────────────────────
 function drawGlassesImage(ctx, cx, cy, templeW, angle, g) {
-  const img = imgCache[g.id];
-  if (!img || !img.complete) return;
+  const cached = processedCache[g.id];
+  const raw    = imgCache[g.id];
+  if (!cached && (!raw || !raw.complete)) return;
 
-  const scaleX  = (g.scaleX  || 1.0);
-  const offsetY = (g.offsetY || 0);
-  const drawW = templeW * 1.08 * scaleX;
-  const drawH = drawW * (img.naturalHeight / img.naturalWidth);
+  const source  = (cached && cached.canvas) ? cached.canvas : raw;
+  const srcW    = source.naturalWidth  || source.width;
+  const srcH    = source.naturalHeight || source.height;
+  const scaleX  = g.scaleX  || 1.0;
+  const offsetY = g.offsetY || 0;
+  const drawW   = templeW * 1.08 * scaleX;
+  const drawH   = drawW * (srcH / srcW);
+  const useMultiply = cached && !cached.hasCors;
 
   ctx.save();
   ctx.translate(cx, cy + offsetY);
   ctx.rotate(angle);
-  ctx.drawImage(img, -drawW/2, -drawH * 0.42, drawW, drawH);
+  // multiply blend: white bg × face = face (bg disappears naturally)
+  if (useMultiply) ctx.globalCompositeOperation = 'multiply';
+  ctx.drawImage(source, -drawW / 2, -drawH * 0.45, drawW, drawH);
   ctx.restore();
 }
 
-// Ensure image is cached for a glasses item
+// Ensure image is loaded + background processed
 function ensureImage(g) {
-  if (g.type !== 'image' || imgCache[g.id]) return;
+  if (g.type !== 'image') return;
+  if (processedCache[g.id]) return;
+
+  // Mark as loading to avoid duplicate requests
+  processedCache[g.id] = null;
+
   const img = new Image();
   img.crossOrigin = 'anonymous';
+  img.onload = () => {
+    imgCache[g.id] = img;
+    const result = removeBackground(img, bgThreshold);
+    processedCache[g.id] = result;
+    renderGrid(); // refresh thumbnail previews
+  };
+  img.onerror = () => {
+    // Retry without crossOrigin (gives up CORS but still renders)
+    const img2 = new Image();
+    img2.onload = () => {
+      imgCache[g.id] = img2;
+      processedCache[g.id] = { canvas: null, hasCors: false };
+      renderGrid();
+    };
+    img2.src = g.imageUrl;
+  };
   img.src = g.imageUrl;
-  imgCache[g.id] = img;
 }
 
 // ─────────────────────────────────────────────
@@ -665,6 +753,25 @@ function downloadSample() {
 }
 
 // ─────────────────────────────────────────────
+// BACKGROUND REMOVAL CONTROLS
+// ─────────────────────────────────────────────
+function onThresholdChange(val) {
+  document.getElementById('bgThreshVal').textContent = val;
+}
+
+function reprocessAll() {
+  const val = parseInt(document.getElementById('bgThreshSlider').value);
+  bgThreshold = val;
+  // Clear processed cache for all image-type glasses, keep raw img
+  allGlasses().forEach(g => {
+    if (g.type === 'image') delete processedCache[g.id];
+  });
+  // Re-trigger processing
+  allGlasses().forEach(g => { if (g.type === 'image') ensureImage(g); });
+  showToast('Đang xử lý lại ảnh...', '');
+}
+
+// ─────────────────────────────────────────────
 // OPACITY CYCLE
 // ─────────────────────────────────────────────
 function cycleOpacity() {
@@ -807,6 +914,7 @@ async function initTryOn() {
 
     lo.style.display = 'none';
     document.getElementById('btnSnap').style.display = 'inline-block';
+    document.getElementById('bgRemoveRow').style.display = 'flex';
   } catch(e) {
     lo.style.display = 'none';
     document.getElementById('startBtn').style.display = 'flex';
